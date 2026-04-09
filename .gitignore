@@ -1,5 +1,6 @@
 *.log
 .history
+.history
 .DS_Store
 .env
 .env.backup
