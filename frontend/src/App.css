@@ -1,7 +1,7 @@
 .notes-app {
-  max-width: 560px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem 1rem 3rem;
   text-align: left;
 }
 
@@ -14,34 +14,73 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0;
 }
 
 .notes-header p {
   font-size: 13px;
   color: var(--text);
-  margin-top: 4px;
+  margin-top: 8px;
+}
+
+.notes-header-row,
+.auth-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #5DCAA5;
+  background: #5dcaa5;
   display: inline-block;
   flex-shrink: 0;
+}
+
+.auth-switch {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .form-card {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1.25rem;
   margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.auth-card {
+  max-width: 480px;
 }
 
 .form-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -52,8 +91,8 @@
 .form-card textarea {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
+  border-radius: 10px;
+  padding: 11px 12px;
   font-size: 14px;
   font-family: var(--sans);
   color: var(--text-h);
@@ -62,7 +101,7 @@
   margin-bottom: 10px;
   resize: none;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .form-card input:focus,
@@ -71,43 +110,56 @@
   background: var(--bg);
 }
 
+.form-error {
+  color: #c0392b;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
 .btn-actions {
   display: flex;
   gap: 8px;
+}
+
+.btn-primary,
+.btn-cancel,
+.btn-edit,
+.btn-delete {
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn-primary:disabled,
+.btn-cancel:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .btn-primary {
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: var(--sans);
-  transition: opacity 0.15s;
+  padding: 10px 18px;
 }
 
 .btn-primary:hover {
-  opacity: 0.85;
+  opacity: 0.88;
 }
 
 .btn-cancel {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: var(--sans);
+  padding: 10px 18px;
 }
 
 .section-label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -123,7 +175,7 @@
 .note-card {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 1rem 1.25rem;
   transition: border-color 0.15s;
 }
@@ -134,7 +186,7 @@
 
 .note-title {
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-h);
 }
 
@@ -143,6 +195,7 @@
   color: var(--text);
   margin-top: 6px;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .note-footer {
@@ -154,15 +207,10 @@
 }
 
 .btn-edit {
-  font-size: 12px;
   color: var(--text);
   background: var(--code-bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 12px;
-  cursor: pointer;
-  font-family: var(--sans);
-  transition: border-color 0.15s;
+  padding: 7px 12px;
 }
 
 .btn-edit:hover {
@@ -171,14 +219,10 @@
 }
 
 .btn-delete {
-  font-size: 12px;
   color: #c0392b;
   background: #fdf0ef;
   border: 1px solid #f5c6c2;
-  border-radius: 8px;
-  padding: 5px 12px;
-  cursor: pointer;
-  font-family: var(--sans);
+  padding: 7px 12px;
 }
 
 .empty {
@@ -187,5 +231,25 @@
   color: var(--text);
   font-size: 13px;
   border: 1px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
+}
+
+@media (max-width: 640px) {
+  .notes-header-row,
+  .auth-header {
+    flex-direction: column;
+  }
+
+  .auth-switch {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+  }
+
+  .btn-actions,
+  .note-footer {
+    flex-wrap: wrap;
+  }
 }

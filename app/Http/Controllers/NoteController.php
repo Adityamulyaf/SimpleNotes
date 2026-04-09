@@ -4,70 +4,64 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class NoteController extends Controller
 {
-
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        $notes = Note::where('user_id', 1)->get();
+        $notes = Note::where('user_id', $request->user()->id)
+            ->latest()
+            ->get();
 
         return response()->json($notes);
     }
 
-    public function create()
+    public function store(Request $request): JsonResponse
     {
-        return view('notes.create');
-    }
-
-    public function store(Request $request)
-    {
-    $note = Note::create([
-        'title' => $request->title,
-        'content' => $request->content,
-        'user_id' => 1
-    ]);
-
-    return response()->json($note);
-    }
-
-    public function edit($id)
-    {
-        $note = Note::findOrFail($id);
-
-        if ($note->user_id !== 1) {
-            abort(403);
-        }
-
-        return view('notes.edit', compact('note'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $note = Note::findOrFail($id);
-
-        if ($note->user_id !== 1) {
-            abort(403);
-        }
-
-        $note->update([
-            'title' => $request->title,
-            'content' => $request->content
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['nullable', 'string'],
         ]);
 
-        return response()->json(['message' => 'updated']);
+        $note = Note::create([
+            'title' => $validated['title'],
+            'content' => $validated['content'] ?? null,
+            'user_id' => $request->user()->id,
+        ]);
+
+        return response()->json($note, 201);
     }
 
-    public function destroy($id)
+    public function update(Request $request, $id): JsonResponse
     {
-        $note = Note::findOrFail($id);
+        $note = $this->findUserNote($request, $id);
 
-        if ($note->user_id !== 1) {
-            abort(403);
-        }
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'content' => ['nullable', 'string'],
+        ]);
+
+        $note->update([
+            'title' => $validated['title'],
+            'content' => $validated['content'] ?? null,
+        ]);
+
+        return response()->json($note->fresh());
+    }
+
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        $note = $this->findUserNote($request, $id);
 
         $note->delete();
 
         return response()->json(['message' => 'deleted']);
+    }
+
+    private function findUserNote(Request $request, int|string $id): Note
+    {
+        return Note::where('user_id', $request->user()->id)
+            ->findOrFail($id);
     }
 }

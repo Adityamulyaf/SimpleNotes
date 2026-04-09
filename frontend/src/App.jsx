@@ -1,103 +1,245 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import AuthPanel from "./components/AuthPanel";
+import NotesPanel from "./components/NotesPanel";
+import {
+  clearCsrfToken,
+  createNote,
+  deleteNote,
+  fetchNotes as fetchNotesRequest,
+  getCurrentUser,
+  login,
+  logout,
+  register,
+  updateNote,
+} from "./lib/api";
 import "./App.css";
 
+const defaultAuthForm = {
+  name: "",
+  email: "",
+  password: "",
+  password_confirmation: "",
+};
+
+const defaultNoteForm = {
+  title: "",
+  content: "",
+};
+
 function App() {
+  const [user, setUser] = useState(null);
+  const [authMode, setAuthMode] = useState("login");
+  const [authForm, setAuthForm] = useState(defaultAuthForm);
+  const [noteForm, setNoteForm] = useState(defaultNoteForm);
   const [notes, setNotes] = useState([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchNotes();
+    bootstrapSession();
   }, []);
 
-  const fetchNotes = () => {
-    axios.get("http://127.0.0.1:8000/api/notes")
-      .then(res => setNotes(res.data));
-  };
+  async function bootstrapSession() {
+    setLoading(true);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editingId) {
-      axios.put(`http://127.0.0.1:8000/api/notes/${editingId}`, { title, content })
-        .then(() => { setTitle(""); setContent(""); setEditingId(null); fetchNotes(); });
-    } else {
-      axios.post("http://127.0.0.1:8000/api/notes", { title, content })
-        .then(() => { setTitle(""); setContent(""); fetchNotes(); });
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      await fetchNotes();
+    } catch (requestError) {
+      if (requestError.status !== 401) {
+        setError(requestError.message);
+      }
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Yakin hapus note ini?")) return;
-    axios.delete(`http://127.0.0.1:8000/api/notes/${id}`).then(fetchNotes);
-  };
+  function insertOrReplaceNote(note) {
+    setNotes((currentNotes) => {
+      const existingIndex = currentNotes.findIndex(
+        (currentNote) => currentNote.id === note.id,
+      );
 
-  const handleEdit = (note) => {
+      if (existingIndex === -1) {
+        return [note, ...currentNotes];
+      }
+
+      const nextNotes = [...currentNotes];
+      nextNotes[existingIndex] = note;
+      return nextNotes;
+    });
+  }
+
+  async function fetchNotes() {
+    const data = await fetchNotesRequest();
+    setNotes(data);
+  }
+
+  function updateAuthField(field, value) {
+    setAuthForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function updateNoteField(field, value) {
+    setNoteForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  async function handleAuthSubmit(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    try {
+      const payload =
+        authMode === "login"
+          ? {
+              email: authForm.email,
+              password: authForm.password,
+            }
+          : authForm;
+
+      const authenticatedUser =
+        authMode === "login" ? await login(payload) : await register(payload);
+      setUser(authenticatedUser);
+      setAuthForm(defaultAuthForm);
+      clearCsrfToken();
+      await fetchNotes();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleLogout() {
+    setSubmitting(true);
+    setError("");
+
+    try {
+      await logout();
+      setUser(null);
+      setNotes([]);
+      setEditingId(null);
+      setNoteForm(defaultNoteForm);
+      setAuthMode("login");
+      clearCsrfToken();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleNoteSubmit(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+
+    try {
+      let savedNote;
+
+      if (editingId) {
+        savedNote = await updateNote(editingId, noteForm);
+      } else {
+        savedNote = await createNote(noteForm);
+      }
+
+      insertOrReplaceNote(savedNote);
+      setEditingId(null);
+      setNoteForm(defaultNoteForm);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm("Yakin hapus note ini?")) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      await deleteNote(id);
+      setNotes((currentNotes) =>
+        currentNotes.filter((currentNote) => currentNote.id !== id),
+      );
+
+      if (editingId === id) {
+        setEditingId(null);
+        setNoteForm(defaultNoteForm);
+      }
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleEdit(note) {
     setEditingId(note.id);
-    setTitle(note.title);
-    setContent(note.content);
-  };
+    setNoteForm({
+      title: note.title,
+      content: note.content ?? "",
+    });
+  }
 
-  const handleCancel = () => {
+  function handleCancelEdit() {
     setEditingId(null);
-    setTitle("");
-    setContent("");
-  };
+    setNoteForm(defaultNoteForm);
+  }
+
+  if (loading) {
+    return (
+      <div className="notes-app">
+        <div className="empty">Menyiapkan sesi aplikasi...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <AuthPanel
+        authMode={authMode}
+        authForm={authForm}
+        error={error}
+        submitting={submitting}
+        onModeChange={(mode) => {
+          setAuthMode(mode);
+          setError("");
+        }}
+        onFieldChange={updateAuthField}
+        onSubmit={handleAuthSubmit}
+      />
+    );
+  }
 
   return (
-    <div className="notes-app">
-      <div className="notes-header">
-        <h1><span className="dot" /> Notes</h1>
-        <p>{notes.length} {notes.length === 1 ? "note" : "notes"}</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="form-card">
-        <div className="form-label">{editingId ? "Edit note" : "New note"}</div>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <textarea
-          rows={3}
-          placeholder="Write something..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <div className="btn-actions">
-          <button type="submit" className="btn-primary">
-            {editingId ? "Update" : "Add note"}
-          </button>
-          {editingId && (
-            <button type="button" className="btn-cancel" onClick={handleCancel}>
-              Cancel
-            </button>
-          )}
-        </div>
-      </form>
-
-      <div className="section-label">All notes</div>
-
-      {notes.length === 0 ? (
-        <div className="empty">No notes yet. Create one above.</div>
-      ) : (
-        <div className="notes-list">
-          {notes.map(note => (
-            <div key={note.id} className="note-card">
-              <div className="note-title">{note.title}</div>
-              <p className="note-content">{note.content}</p>
-              <div className="note-footer">
-                <button className="btn-edit" onClick={() => handleEdit(note)}>Edit</button>
-                <button className="btn-delete" onClick={() => handleDelete(note.id)}>Delete</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <NotesPanel
+      user={user}
+      notes={notes}
+      noteForm={noteForm}
+      editingId={editingId}
+      error={error}
+      submitting={submitting}
+      onLogout={handleLogout}
+      onNoteFieldChange={updateNoteField}
+      onNoteSubmit={handleNoteSubmit}
+      onCancelEdit={handleCancelEdit}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+    />
   );
 }
 
