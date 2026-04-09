@@ -7,11 +7,12 @@ use Illuminate\Http\Request;
 
 class NoteController extends Controller
 {
+
     public function index()
     {
-        $notes = Note::where('user_id', auth()->id())->get();
+        $notes = Note::where('user_id', 1)->get();
 
-        return view('notes.index', compact('notes'));
+        return response()->json($notes);
     }
 
     public function create()
@@ -21,20 +22,20 @@ class NoteController extends Controller
 
     public function store(Request $request)
     {
-        Note::create([
-            'title' => $request->title,
-            'content' => $request->content,
-            'user_id' => auth()->id()
-        ]);
+    $note = Note::create([
+        'title' => $request->title,
+        'content' => $request->content,
+        'user_id' => 1
+    ]);
 
-        return redirect('/notes');
+    return response()->json($note);
     }
 
     public function edit($id)
     {
         $note = Note::findOrFail($id);
 
-        if ($note->user_id !== auth()->id()) {
+        if ($note->user_id !== 1) {
             abort(403);
         }
 
@@ -45,7 +46,7 @@ class NoteController extends Controller
     {
         $note = Note::findOrFail($id);
 
-        if ($note->user_id !== auth()->id()) {
+        if ($note->user_id !== 1) {
             abort(403);
         }
 
@@ -54,19 +55,19 @@ class NoteController extends Controller
             'content' => $request->content
         ]);
 
-        return redirect('/notes');
+        return response()->json(['message' => 'updated']);
     }
 
     public function destroy($id)
     {
         $note = Note::findOrFail($id);
 
-        if ($note->user_id !== auth()->id()) {
+        if ($note->user_id !== 1) {
             abort(403);
         }
 
         $note->delete();
 
-        return redirect('/notes');
+        return response()->json(['message' => 'deleted']);
     }
 }
