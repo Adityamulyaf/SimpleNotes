@@ -1,200 +1,149 @@
 # SimpleNotes
 
-SimpleNotes is a small full-stack notes application built with Laravel for the backend API and React for the frontend UI. It supports creating, listing, updating, and deleting notes through a simple interface.
+SimpleNotes is a full-stack notes app built with Laravel and React. It uses Laravel session-based authentication and a React UI for login, registration, and personal note management.
 
-## Features
+## Highlights
 
-- Create new notes
-- View all saved notes
-- Edit existing notes
-- Delete notes with confirmation
-- Laravel API backend with SQLite database
-- React frontend powered by Vite
+- Login, register, and logout with Laravel session auth
+- Personal notes tied to the authenticated user
+- Create, edit, and delete notes from a React interface
+- Faster CRUD flow with local state updates after successful requests
 
-## Tech Stack
+## Stack
 
-- Backend: Laravel 13, PHP 8.3
-- Frontend: React 19, Vite
-- Database: SQLite
-- HTTP client: Axios
-- Styling: Custom CSS in the React app
+- Laravel 13
+- PHP 8.3
+- React 19
+- Vite
+- SQLite
 
-## Project Structure
+## Screenshot
 
-```text
-SimpleNotes/
-|- app/
-|  |- Http/Controllers/NoteController.php
-|- bootstrap/
-|- config/
-|- database/
-|  |- migrations/
-|- frontend/
-|  |- src/App.jsx
-|  |- src/App.css
-|- routes/
-|  |- api.php
-|  |- web.php
-|- README.md
-```
+<p align="center">
+  <img src="./docs/screenshots/simplenotes.png" alt="Login" width="48%" />
+  <img src="./docs/screenshots/simplenotes1.png" alt="Notes" width="48%" />
+</p>
 
-## Requirements
 
-- PHP 8.3 or newer
-- Composer
-- Node.js and npm
+## Quick Start
 
-## Setup
-
-### 1. Clone the project
+### 1. Clone and install backend
 
 ```bash
 git clone <your-repo-url>
 cd SimpleNotes
-```
-
-### 2. Install backend dependencies
-
-```bash
 composer install
 ```
 
-### 3. Create environment file
+### 2. Create the Laravel env
+
+Windows:
 
 ```bash
 copy .env.example .env
 php artisan key:generate
 ```
 
-If you are not on Windows, use:
+macOS/Linux:
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-### 4. Prepare the database
+### 3. Prepare SQLite
 
-This project uses SQLite by default.
-
-Create the database file if it does not exist:
+Windows:
 
 ```bash
 type nul > database\database.sqlite
-```
-
-Then run migrations:
-
-```bash
 php artisan migrate
 ```
 
-### 5. Install frontend dependencies
-
-Root Vite dependencies:
+macOS/Linux:
 
 ```bash
-npm install
+touch database/database.sqlite
+php artisan migrate
 ```
 
-React frontend dependencies:
+### 4. Install frontend
 
 ```bash
 cd frontend
 npm install
-cd ..
 ```
 
-## Running the App
+### 5. Create the frontend env
 
-You need to run the Laravel API and the React frontend separately.
-
-### Terminal 1: Run Laravel
-
-From the project root:
+Windows:
 
 ```bash
-php artisan serve
+copy .env.example .env
 ```
 
-The backend will usually be available at:
+macOS/Linux:
 
-```text
-http://127.0.0.1:8000
+```bash
+cp .env.example .env
 ```
 
-### Terminal 2: Run React
+Default value:
 
-From the `frontend` folder:
+```env
+VITE_API_BASE_URL=http://localhost:8000/api
+```
+
+## Run Locally
+
+Backend:
+
+```bash
+php artisan serve --host=localhost --port=8000
+```
+
+Frontend:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-The frontend will usually be available at:
+Use:
 
-```text
-http://127.0.0.1:5173
-```
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
 
-## API Endpoints
+Do not mix `localhost` and `127.0.0.1`, because that can trigger `419` session/CSRF issues.
+
+## API
 
 Base URL:
 
 ```text
-http://127.0.0.1:8000/api
+http://localhost:8000/api
 ```
 
-Available endpoints:
+Auth:
 
-- `GET /notes` - fetch all notes
-- `POST /notes` - create a note
-- `PUT /notes/{id}` - update a note
-- `DELETE /notes/{id}` - delete a note
+- `GET /csrf-token`
+- `GET /user`
+- `POST /register`
+- `POST /login`
+- `POST /logout`
 
-Example request body for create and update:
+Notes:
 
-```json
-{
-  "title": "My note",
-  "content": "This is the note content"
-}
-```
+- `GET /notes`
+- `POST /notes`
+- `PUT /notes/{id}`
+- `DELETE /notes/{id}`
 
 ## Notes
 
-- The current controller implementation is set up for a simple demo flow.
-- Notes are currently tied to a fixed user id in the controller.
-- If you want full authentication-based ownership, the next step is to replace the hardcoded user id with the authenticated user.
-- If CORS issues appear during local development, make sure `config/cors.php` allows your frontend origin such as `http://127.0.0.1:5173`.
-
-## Useful Commands
-
-From the project root:
-
-```bash
-php artisan route:list
-php artisan migrate
-php artisan optimize:clear
-php artisan test
-```
-
-From the frontend folder:
-
-```bash
-npm run dev
-npm run build
-npm run preview
-```
-
-## Future Improvements
-
-- Add authentication and real user-based note ownership
-- Add form validation and error messages
-- Add search or filtering
-- Add note timestamps in the UI
-- Add pagination for larger datasets
+- The React app uses `frontend/src/lib/api.js` for request handling
+- Notes are updated in local state after create, update, and delete
+- Some Blade views still remain for built-in Laravel utility flows like password reset and profile management
 
 ## License
 
